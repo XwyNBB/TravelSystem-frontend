@@ -5,7 +5,6 @@ const LoginForm = ({ onLogin, loading }) => {
   const [userType, setUserType] = useState('user');
   const [account, setAccount] = useState('');
   const [password, setPassword] = useState('');
-  
   const navigate = useNavigate();
 
   const handleSubmit = (e) => {
@@ -16,6 +15,7 @@ const LoginForm = ({ onLogin, loading }) => {
       alert('请输入账号和密码');
       return;
     }
+
     
     // 调用父组件的登录处理函数
     onLogin(userType, { account, password });
@@ -35,6 +35,8 @@ const LoginForm = ({ onLogin, loading }) => {
         >
           <option value="user">普通用户</option>
           <option value="staff">工作人员</option>
+          <option value="test-user">t用户</option>
+          <option value="test-staff">t工作人员</option>
         </select>
       </div>
       
@@ -70,7 +72,7 @@ const LoginForm = ({ onLogin, loading }) => {
         <button 
           type="button" 
           onClick={handleRegister}
-          disabled={loading || userType === 'staff'}
+          disabled={loading}
         >
           注册 (仅用户)
         </button>
@@ -79,4 +81,4 @@ const LoginForm = ({ onLogin, loading }) => {
   );
 };
 
-export default LoginForm;  
+export default LoginForm;

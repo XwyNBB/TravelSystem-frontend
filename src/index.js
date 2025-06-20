@@ -1,13 +1,18 @@
+//index.js
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+import { BrowserRouter } from 'react-router-dom';
+
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <App />
+    <BrowserRouter> {/* 关键：在最外层包裹路由 */}
+      <App />
+    </BrowserRouter>
   </React.StrictMode>
 );
 

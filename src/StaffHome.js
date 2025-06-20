@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import StatsPanel from './StatsPanel';
 import CommentManagement from './CommentManagement';
 import PlanManagement from './PlanManagement';
 import OrderManagement from './OrderManagement';

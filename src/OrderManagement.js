@@ -10,6 +10,10 @@ const OrderManagement = () => {
   const [error, setError] = useState('');
   const [isDetail, setIsDetail] = useState(false);
   const [detailOrder, setDetailOrder] = useState(null);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [showStatusForm, setShowStatusForm] = useState(false);
+  const [adminPassword, setAdminPassword] = useState('');
+  const [newStatus, setNewStatus] = useState(''); // 初始化为空字符串
 
   // 模拟从后端获取订单数据
   const fetchOrders = async () => {
@@ -17,10 +21,8 @@ const OrderManagement = () => {
     setError('');
     
     try {
-      // 模拟API请求延迟
       await new Promise(resolve => setTimeout(resolve, 800));
       
-      // 模拟订单数据
       const mockOrders = [
         { id: 'ORD001', planId: 'PLN002', passengerName: '张三', passengerPhone: '13800138001', 
           numOfPassengers: 2, totalAmount: 598, status: 'unpaid', orderDate: '2025-06-10' },
@@ -51,6 +53,7 @@ const OrderManagement = () => {
     if (order) {
       setDetailOrder(order);
       setIsDetail(true);
+      setNewStatus(order.status); // 初始化新状态为当前订单状态
     } else {
       setError(`未找到ID为 ${searchId} 的订单`);
     }
@@ -61,53 +64,47 @@ const OrderManagement = () => {
     setIsDetail(false);
     setDetailOrder(null);
     setSearchId('');
+    setShowPasswordModal(false);
+    setShowStatusForm(false);
   };
 
-  // 保存修改
-  const handleSave = (updatedOrder) => {
-    setDetailOrder(updatedOrder);
-    setError('订单信息已更新');
-    
-    // 2秒后清除提示
-    setTimeout(() => {
-      setError('');
-    }, 2000);
+  // 显示密码弹窗
+  const handleShowPasswordModal = () => {
+    setShowPasswordModal(true);
   };
 
-  // 处理订单
-  const handleProcessOrder = () => {
+  // 取消密码验证
+  const handleCancelPassword = () => {
+    setShowPasswordModal(false);
+    setAdminPassword('');
+  };
+
+  // 验证管理员密码
+  const handleVerifyPassword = () => {
+    if (adminPassword === 'test') {
+      // 合并状态更新
+      setShowPasswordModal(false);
+      setShowStatusForm(true);
+      setAdminPassword('');
+    } else {
+      setError('密码错误，请重试');
+      setTimeout(() => setError(''), 3000);
+    }
+  };
+
+  // 保存状态修改
+  const handleSaveStatus = () => {
     if (!detailOrder) return;
     
     setDetailOrder({
       ...detailOrder,
-      status: detailOrder.status === 'unpaid' ? 'unused' : 
-               detailOrder.status === 'unused' ? 'completed' : 
-               detailOrder.status
+      status: newStatus
     });
     
+    setShowStatusForm(false);
     setError('订单状态已更新');
     
-    // 2秒后清除提示
-    setTimeout(() => {
-      setError('');
-    }, 2000);
-  };
-
-  // 取消订单
-  const handleCancelOrder = () => {
-    if (!detailOrder) return;
-    
-    setDetailOrder({
-      ...detailOrder,
-      status: 'cancelled'
-    });
-    
-    setError('订单已取消');
-    
-    // 2秒后清除提示
-    setTimeout(() => {
-      setError('');
-    }, 2000);
+    setTimeout(() => setError(''), 3000);
   };
 
   // 组件挂载时获取订单数据
@@ -122,6 +119,13 @@ const OrderManagement = () => {
       handleSearch();
     }
   }, [id]);
+
+  // 当detailOrder更新时，同步newStatus
+  useEffect(() => {
+    if (detailOrder) {
+      setNewStatus(detailOrder.status);
+    }
+  }, [detailOrder]);
 
   if (loading) {
     return <div className="text-center py-10">加载中...</div>;
@@ -221,157 +225,126 @@ const OrderManagement = () => {
             </button>
           </div>
           
-          <div className="detail-form">
-            <div className="mb-4">
-              <label htmlFor="id" className="block text-gray-700 mb-2">订单ID</label>
-              <input
-                type="text"
-                id="id"
-                value={detailOrder.id}
-                disabled
-                className="w-full px-4 py-2 border rounded-md bg-gray-100"
-              />
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              <div>
-                <label htmlFor="planId" className="block text-gray-700 mb-2">行程ID</label>
-                <input
-                  type="text"
-                  id="planId"
-                  value={detailOrder.planId}
-                  onChange={(e) => {
-                    setDetailOrder({
-                      ...detailOrder,
-                      planId: e.target.value
-                    });
-                  }}
-                  className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
+          <div className="detail-table mb-6">
+            <table className="w-full border-collapse">
+              <tbody>
+                <tr>
+                  <th className="border p-3 text-left w-1/4 bg-gray-50">订单ID</th>
+                  <td className="border p-3">{detailOrder.id}</td>
+                </tr>
+                <tr>
+                  <th className="border p-3 text-left w-1/4 bg-gray-50">行程ID</th>
+                  <td className="border p-3">{detailOrder.planId}</td>
+                </tr>
+                <tr>
+                  <th className="border p-3 text-left w-1/4 bg-gray-50">乘客姓名</th>
+                  <td className="border p-3">{detailOrder.passengerName}</td>
+                </tr>
+                <tr>
+                  <th className="border p-3 text-left w-1/4 bg-gray-50">联系电话</th>
+                  <td className="border p-3">{detailOrder.passengerPhone}</td>
+                </tr>
+                <tr>
+                  <th className="border p-3 text-left w-1/4 bg-gray-50">乘客数量</th>
+                  <td className="border p-3">{detailOrder.numOfPassengers} 人</td>
+                </tr>
+                <tr>
+                  <th className="border p-3 text-left w-1/4 bg-gray-50">订单金额</th>
+                  <td className="border p-3">¥{detailOrder.totalAmount}</td>
+                </tr>
+                <tr>
+                  <th className="border p-3 text-left w-1/4 bg-gray-50">订单状态</th>
+                  <td className="border p-3">
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      detailOrder.status === 'unpaid' ? 'bg-yellow-100 text-yellow-800' :
+                      detailOrder.status === 'unused' ? 'bg-blue-100 text-blue-800' :
+                      detailOrder.status === 'completed' ? 'bg-green-100 text-green-800' :
+                      'bg-gray-100 text-gray-800'
+                    }`}>
+                      {detailOrder.status === 'unpaid' ? '未支付' :
+                       detailOrder.status === 'unused' ? '未使用' :
+                       detailOrder.status === 'completed' ? '已完成' : '已取消'}
+                    </span>
+                  </td>
+                </tr>
+                <tr>
+                  <th className="border p-3 text-left w-1/4 bg-gray-50">下单日期</th>
+                  <td className="border p-3">{detailOrder.orderDate}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          
+          {/* 处理订单密码验证弹窗 */}
+          {showPasswordModal && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-white p-6 rounded-lg w-1/3 max-w-md">
+                <h3 className="text-xl font-semibold mb-4">管理员密码验证</h3>
+                <div className="mb-4">
+                  <label htmlFor="adminPassword" className="block text-gray-700 mb-2">输入管理员密码</label>
+                  <input
+                    type="password"
+                    id="adminPassword"
+                    value={adminPassword}
+                    onChange={(e) => setAdminPassword(e.target.value)}
+                    className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    onClick={handleCancelPassword}
+                    className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300"
+                  >
+                    取消
+                  </button>
+                  <button
+                    onClick={handleVerifyPassword}
+                    className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                  >
+                    验证
+                  </button>
+                </div>
               </div>
-              <div>
-                <label htmlFor="passengerName" className="block text-gray-700 mb-2">乘客姓名</label>
-                <input
-                  type="text"
-                  id="passengerName"
-                  value={detailOrder.passengerName}
-                  onChange={(e) => {
-                    setDetailOrder({
-                      ...detailOrder,
-                      passengerName: e.target.value
-                    });
-                  }}
+            </div>
+          )}
+          
+          {/* 状态修改表单 */}
+          {showStatusForm && (
+            <div className="bg-gray-50 p-6 rounded-lg mb-6">
+              <h3 className="text-lg font-semibold mb-4">修改订单状态</h3>
+              <div className="mb-4">
+                <label htmlFor="newStatus" className="block text-gray-700 mb-2">选择新状态</label>
+                <select
+                  id="newStatus"
+                  value={newStatus}
+                  onChange={(e) => setNewStatus(e.target.value)}
                   className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
+                >
+                  <option value="unpaid">未支付</option>
+                  <option value="unused">未使用</option>
+                  <option value="completed">已完成</option>
+                  <option value="cancelled">已取消</option>
+                </select>
               </div>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              <div>
-                <label htmlFor="passengerPhone" className="block text-gray-700 mb-2">联系电话</label>
-                <input
-                  type="text"
-                  id="passengerPhone"
-                  value={detailOrder.passengerPhone}
-                  onChange={(e) => {
-                    setDetailOrder({
-                      ...detailOrder,
-                      passengerPhone: e.target.value
-                    });
-                  }}
-                  className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label htmlFor="numOfPassengers" className="block text-gray-700 mb-2">乘客数量</label>
-                <input
-                  type="number"
-                  id="numOfPassengers"
-                  value={detailOrder.numOfPassengers}
-                  onChange={(e) => {
-                    setDetailOrder({
-                      ...detailOrder,
-                      numOfPassengers: parseInt(e.target.value)
-                    });
-                  }}
-                  className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-            
-            <div className="mb-4">
-              <label htmlFor="totalAmount" className="block text-gray-700 mb-2">订单金额</label>
-              <input
-                type="number"
-                id="totalAmount"
-                value={detailOrder.totalAmount}
-                onChange={(e) => {
-                  setDetailOrder({
-                    ...detailOrder,
-                    totalAmount: parseInt(e.target.value)
-                  });
-                }}
-                className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            
-            <div className="mb-4">
-              <label htmlFor="status" className="block text-gray-700 mb-2">订单状态</label>
-              <select
-                id="status"
-                value={detailOrder.status}
-                onChange={(e) => {
-                  setDetailOrder({
-                    ...detailOrder,
-                    status: e.target.value
-                  });
-                }}
-                className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="unpaid">未支付</option>
-                <option value="unused">未使用</option>
-                <option value="completed">已完成</option>
-                <option value="cancelled">已取消</option>
-              </select>
-            </div>
-            
-            <div className="mb-4">
-              <label htmlFor="orderDate" className="block text-gray-700 mb-2">下单日期</label>
-              <input
-                type="date"
-                id="orderDate"
-                value={detailOrder.orderDate}
-                onChange={(e) => {
-                  setDetailOrder({
-                    ...detailOrder,
-                    orderDate: e.target.value
-                  });
-                }}
-                className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            
-            <div className="flex gap-3 mt-6">
               <button
-                onClick={() => handleSave(detailOrder)}
-                className="px-5 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                onClick={handleSaveStatus}
+                className="px-5 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
               >
                 保存修改
               </button>
-              <button
-                onClick={handleProcessOrder}
-                className="px-5 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
-              >
-                处理订单
-              </button>
-              <button
-                onClick={handleCancelOrder}
-                className="px-5 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
-              >
-                取消订单
-              </button>
             </div>
-          </div>
+          )}
+          
+          {!showStatusForm && (
+      <div className="mt-6">
+        <button
+          onClick={handleShowPasswordModal}
+          className="px-5 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
+        >
+          处理订单
+        </button>
+      </div>
+    )}
         </>
       )}
     </div>

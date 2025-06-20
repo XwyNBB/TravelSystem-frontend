@@ -1,39 +1,57 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SearchForm from './SearchForm';
-import OrderFilter from './OrderFilter';
-import Others from './Others';
+import OrderFilter from './OrderFilter'; 
+import { AuthContext } from './AuthContext';
+import axios from 'axios';
 
 const UserHome = ({ account }) => {
-  const [orders, setOrders] = useState([]);
+  const navigate = useNavigate();
+  const [allOrders, setAllOrders] = useState([]);
+  const [filteredOrders, setFilteredOrders] = useState([]);
   const [currentStatus, setCurrentStatus] = useState('all');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const navigate = useNavigate();
+  const { logout } = useContext(AuthContext);
 
-  // 模拟从后端获取订单数据
-  const fetchOrders = async (status = 'all') => {
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
+  // 处理搜索表单提交
+  const handleSearch = (departure, destination) => {
+    // 导航到行程列表页并带上搜索参数
+    navigate(`/plan-list?departure=${departure}&destination=${destination}`);
+  };
+
+  // 从后端获取所有订单
+  const fetchAllOrders = async () => {
     setLoading(true);
     setError('');
     
     try {
-      // 模拟API请求延迟
-      await new Promise(resolve => setTimeout(resolve, 800));
+       const response = await axios.post('/api/orders', {
+        
+        account} ); 
+      // 后端返回的订单数据格式为 {status == '' ,orders: [...] }
+      if (response.data.status !== 'success') {
+        throw new Error('获取订单失败');
+      } 
+      // // 模拟API请求延迟
+      // await new Promise(resolve => setTimeout(resolve, 800));
       
-      // 模拟订单数据
-      const mockOrders = [
-        { id: 'ORD001', status: 'unpaid', amount: 299, date: '2025-06-10' },
-        { id: 'ORD002', status: 'unused', amount: 159, date: '2025-06-12' },
-        { id: 'ORD003', status: 'completed', amount: 459, date: '2025-06-05' },
-        { id: 'ORD004', status: 'cancelled', amount: 199, date: '2025-06-01' }
-      ];
+      // // 模拟返回的订单数据
+      // const mockOrders = [
+      //   { id: 'ORD001', date: '2025-06-15', amount: 599, status: 'unpaid' },
+      //   { id: 'ORD002', date: '2025-06-10', amount: 1299, status: 'unused' },
+      //   { id: 'ORD003', date: '2025-05-28', amount: 899, status: 'completed' },
+      //   { id: 'ORD004', date: '2025-05-20', amount: 399, status: 'cancelled' }
+      // ];
+      const mockOrders = response.data.orders; // 假设后端返回的订单数据在orders字段中
       
-      // 根据状态筛选订单
-      const filteredOrders = status === 'all' 
-        ? mockOrders 
-        : mockOrders.filter(order => order.status === status);
-      
-      setOrders(filteredOrders);
+      setAllOrders(mockOrders);
+      filterOrders('all');
     } catch (err) {
       setError('获取订单失败，请稍后再试');
       console.error('Fetch orders error:', err);
@@ -42,46 +60,58 @@ const UserHome = ({ account }) => {
     }
   };
 
+  // 本地筛选订单
+  const filterOrders = (status) => {
+    setCurrentStatus(status);
+    if (status === 'all') {
+      setFilteredOrders(allOrders);
+    } else {
+      setFilteredOrders(allOrders.filter(order => order.status === status));
+    }
+  };
+
   // 联系我们
   const handleContact = () => {
     alert('客服热线：400-123-4567');
   };
 
-  // 我的评论
-  const handleComment = () => {
-    navigate('/comments'); // 跳转到评论页面
-  };
 
-  // 组件挂载时获取订单
+  // 组件挂载时获取所有订单
   useEffect(() => {
-    fetchOrders();
-  }, []);
+    fetchAllOrders();
+  }, [account]);
 
-  // 订单状态变更时重新获取订单
+  // 状态变更时本地筛选，不重复请求
   useEffect(() => {
-    fetchOrders(currentStatus);
-  }, [currentStatus]);
+    filterOrders(currentStatus);
+  }, [currentStatus, allOrders]);
 
   return (
     <div className="user-home container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-6">欢迎回来，{account}</h1>
+      <button onClick={handleLogout}>登出</button>
+      <button
+        onClick={handleContact} 
+        className="px-6 py-2 mr-4 bg-gray-200 hover:bg-gray-300 rounded-md transition-colors"
+        disabled={loading}
+      >
+        联系我们
+      </button>
       
-      {/* 搜索表单组件（修改后直接跳转） */}
-      <SearchForm loading={loading} error={error} />
+      {/* 搜索表单组件，传入 handleSearch 方法 */}
+      <SearchForm 
+        onSearch={handleSearch} 
+        loading={loading} 
+        error={error} 
+      />
       
       {/* 订单筛选组件 */}
       <OrderFilter 
         currentStatus={currentStatus} 
-        onFilter={setCurrentStatus} 
+        onFilter={filterOrders} 
         loading={loading}
       />
       
-      {/* 其他功能组件 */}
-      <Others 
-        onContact={handleContact} 
-        onComment={handleComment} 
-        loading={loading}
-      />
       
       {/* 订单列表区域 */}
       <div className="orders-section mt-8">
@@ -89,11 +119,11 @@ const UserHome = ({ account }) => {
         {loading && <p className="text-center text-gray-500">加载中...</p>}
         {error && <p className="text-red-500 text-center">{error}</p>}
         
-        {orders.length === 0 ? (
-          <p className="text-center text-gray-500">暂无订单</p>
+        {filteredOrders.length === 0 ? (
+          <p className="text-center text-gray-500">暂无该状态的订单</p>
         ) : (
           <div className="order-list">
-            {orders.map((order) => (
+            {filteredOrders.map((order) => (
               <div 
                 key={order.id} 
                 className={`order-item p-4 mb-3 rounded-lg ${
@@ -127,7 +157,7 @@ const UserHome = ({ account }) => {
                   <button 
                     className="px-4 py-1.5 bg-gray-200 text-gray-800 rounded-md text-sm hover:bg-gray-300 mr-2"
                     disabled={loading}
-                    onClick={() => navigate(`/order-detail/${order.id}`)} // 跳转到订单详情页
+                    onClick={() => navigate(`/details-page/${order.id}`)}
                   >
                     查看详情
                   </button>
@@ -135,11 +165,20 @@ const UserHome = ({ account }) => {
                     <button 
                       className="px-4 py-1.5 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600"
                       disabled={loading}
-                      onClick={() => navigate('/payment')} // 跳转到支付页
+                      onClick={() => navigate(`/paid-page?orderId=${order.id}`)}
                     >
                       去支付
                     </button>
                   )}
+                  {order.status === 'completed' && (
+                  <button 
+                    className="px-4 py-1.5 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600"
+                    disabled={loading}
+                    onClick={() => navigate(`/comment-page/${order.id}`)}
+                  >
+                    add comment
+                  </button>
+                )}
                 </div>
               </div>
             ))}

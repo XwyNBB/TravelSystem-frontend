@@ -1,31 +1,15 @@
-import React, { useState } from 'react';
-import LoginPage from './LoginPage';
-import UserPage from './UserPage';
-import StaffPage from './StaffPage';
+//app.js
+import './App.css';
+import AppRouter from './Routes';
+import { AuthProvider } from './AuthContext';
 
 function App() {
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
-    const [userType, setUserType] = useState('');
-    const [account, setAccount] = useState('');
-
-    const handleLogin = (type, account, password) => {
-      //check 登录逻辑
-        setIsLoggedIn(true);
-        setUserType(type);
-        setAccount(account);
-    };
-
-    return (
-        <div className="App">
-            {!isLoggedIn ? (
-                <LoginPage onLogin={handleLogin} /> // 将函数作为 props 传递
-            ) : userType === 'user' ? (
-                <UserPage account={account}/>
-            ) : (
-                <StaffPage account={account} />
-            )}
-        </div>
-    );
+  return (
+    <AuthProvider>
+      <div className="App">
+        <AppRouter />
+      </div>
+    </AuthProvider>
+  );
 }
-
 export default App;

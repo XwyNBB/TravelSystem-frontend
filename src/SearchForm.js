@@ -1,16 +1,13 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 
-const SearchForm = ({ loading, error }) => {
+const SearchForm = ({ onSearch, loading, error }) => {
   const [start, setStart] = useState('');
   const [end, setEnd] = useState('');
-  const navigate = useNavigate();
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (start && end) {
-      // 跳转到PlanList页面并传递搜索参数
-      navigate(`/plan-list?departure=${start}&destination=${end}`);
+      onSearch(start, end);
     } else {
       alert('请输入出发地和目的地');
     }

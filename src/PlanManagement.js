@@ -122,23 +122,7 @@ const PlanManagement = () => {
     }, 2000);
   };
 
-  // 切换行程状态
-  const handleToggleStatus = () => {
-    if (!detailPlan) return;
-    
-    setDetailPlan({
-      ...detailPlan,
-      status: detailPlan.status === 'active' ? 'inactive' : 'active'
-    });
-    
-    setError(`行程状态已更新为 ${detailPlan.status === 'active' ? '非活跃' : '活跃'}`);
-    
-    // 2秒后清除提示
-    setTimeout(() => {
-      setError('');
-    }, 2000);
-  };
-
+  
   // 组件挂载时获取行程数据
   useEffect(() => {
     fetchPlans();
@@ -337,39 +321,7 @@ const PlanManagement = () => {
               </div>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              <div>
-                <label htmlFor="departureDate" className="block text-gray-700 mb-2">出发日期</label>
-                <input
-                  type="date"
-                  id="departureDate"
-                  value={detailPlan.departureDate}
-                  onChange={(e) => {
-                    setDetailPlan({
-                      ...detailPlan,
-                      departureDate: e.target.value
-                    });
-                  }}
-                  className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label htmlFor="returnDate" className="block text-gray-700 mb-2">返回日期</label>
-                <input
-                  type="date"
-                  id="returnDate"
-                  value={detailPlan.returnDate}
-                  onChange={(e) => {
-                    setDetailPlan({
-                      ...detailPlan,
-                      returnDate: e.target.value
-                    });
-                  }}
-                  className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-            
+           
             <div className="mb-4">
               <label htmlFor="accommodation" className="block text-gray-700 mb-2">住宿</label>
               <input
@@ -417,24 +369,7 @@ const PlanManagement = () => {
                 className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
-            
-            <div className="mb-4">
-              <label htmlFor="status" className="block text-gray-700 mb-2">行程状态</label>
-              <select
-                id="status"
-                value={detailPlan.status}
-                onChange={(e) => {
-                  setDetailPlan({
-                    ...detailPlan,
-                    status: e.target.value
-                  });
-                }}
-                className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="active">活跃</option>
-                <option value="inactive">非活跃</option>
-              </select>
-            </div>
+           
             
             <div className="flex gap-3 mt-6">
               <button
@@ -443,12 +378,7 @@ const PlanManagement = () => {
               >
                 保存修改
               </button>
-              <button
-                onClick={handleToggleStatus}
-                className="px-5 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600"
-              >
-                {detailPlan.status === 'active' ? '设为非活跃' : '设为活跃'}
-              </button>
+        
             </div>
           </div>
         </>

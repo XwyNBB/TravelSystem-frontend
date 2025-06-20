@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { formatDate } from '../utils/dateUtils'; // 假设存在日期格式化工具函数
+
+const formatDate = (dateString) => {
+  if (!dateString) return '';
+  const [year, month, day] = dateString.split('-');
+  return `${year}年${month}月${day}日`;
+};
+
 
 const CreateOrderPage = () => {
   const location = useLocation();
@@ -13,7 +19,6 @@ const CreateOrderPage = () => {
   const [formData, setFormData] = useState({
     passengerName: '',
     passengerPhone: '',
-    numOfPassengers: 1,
     specialRequests: ''
   });
 
@@ -76,13 +81,6 @@ const CreateOrderPage = () => {
   // 提交订单
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // 简单表单验证
-    if (!formData.passengerName || !formData.passengerPhone) {
-      setError('姓名和电话不能为空');
-      return;
-    }
-    
     setLoading(true);
     setError('');
     
@@ -100,13 +98,10 @@ const CreateOrderPage = () => {
         status: 'unpaid'
       };
       
-      // 订单生成成功
-      setSuccess('订单生成成功！即将返回我的订单页面...');
-      
-      // 2秒后返回UserHome页面
-      setTimeout(() => {
-        navigate('/user-home', { state: { orderCreated: true } });
-      }, 2000);
+      setSuccess({
+        message: '订单生成成功，正在跳转至支付页面...',
+        orderId: orderData.orderId
+      });
       
     } catch (err) {
       setError('订单生成失败，请稍后再试');
@@ -125,6 +120,17 @@ const CreateOrderPage = () => {
     }
   }, [planIdFromUrl, navigate]);
 
+  // 成功提示后自动跳转
+  useEffect(() => {
+    if (success && success.orderId) {
+      const timer = setTimeout(() => {
+        navigate(`/paid-page?orderId=${success.orderId}`);
+      }, 15000);
+      return () => clearTimeout(timer);
+    }
+  }, [success, navigate]);
+
+  
   if (loading) {
     return <div className="text-center py-10">加载中...</div>;
   }
@@ -162,51 +168,25 @@ const CreateOrderPage = () => {
       {/* 订单表单 */}
       <div className="order-form max-w-lg mx-auto">
         <h2 className="font-semibold text-lg mb-4">乘客信息</h2>
-        
+        {/* 根据account请求后端，获取userinfo，显示在这儿 */}
         {error && <p className="text-red-500 mb-4">{error}</p>}
-        {success && <p className="text-green-500 mb-4">{success}</p>}
-        
+        {success && (
+  <div className="success-message">
+    <p className="text-2xl font-semibold text-green-600 mb-4">
+      {success.message}
+      {success.orderId && (
+        <a
+          href={`/paid-page?orderId=${success.orderId}`}
+          className="text-blue-600 ml-2 hover:underline"
+        >
+          点击立即支付
+        </a>
+      )}
+    </p>
+  </div>
+)}
         {!success && (
-          <form onSubmit={handleSubmit}>
-            <div className="mb-4">
-              <label htmlFor="passengerName" className="block text-gray-700 mb-2">乘客姓名</label>
-              <input
-                type="text"
-                id="passengerName"
-                name="passengerName"
-                value={formData.passengerName}
-                onChange={handleFormChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            
-            <div className="mb-4">
-              <label htmlFor="passengerPhone" className="block text-gray-700 mb-2">联系电话</label>
-              <input
-                type="tel"
-                id="passengerPhone"
-                name="passengerPhone"
-                value={formData.passengerPhone}
-                onChange={handleFormChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            
-            <div className="mb-4">
-              <label htmlFor="numOfPassengers" className="block text-gray-700 mb-2">乘客数量</label>
-              <select
-                id="numOfPassengers"
-                name="numOfPassengers"
-                value={formData.numOfPassengers}
-                onChange={handleFormChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                {[...Array(10).keys()].map(i => (
-                  <option key={i+1} value={i+1}>{i+1} 人</option>
-                ))}
-              </select>
-            </div>
-            
+          <form onSubmit={handleSubmit}> 
             <div className="mb-6">
               <label htmlFor="specialRequests" className="block text-gray-700 mb-2">特殊需求 (选填)</label>
               <textarea
@@ -230,7 +210,7 @@ const CreateOrderPage = () => {
           </form>
         )}
       </div>
-    </div>
+    </div>  
   );
 };
 
