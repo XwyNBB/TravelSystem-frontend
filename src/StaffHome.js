@@ -21,8 +21,15 @@ const StaffHome = () => {
     setError('');
     
     try {
-      // 模拟API请求延迟
-      await new Promise(resolve => setTimeout(resolve, 800));
+      // // 模拟API请求延迟
+      // await new Promise(resolve => setTimeout(resolve, 800));
+    
+      const response = await axios.get('/api/Datas');
+      if (response.data.status !== 'success') {
+        throw new Error('获取统计数据失败');
+      }
+  
+      const dataFromStateata = response.data;
       
       // 模拟统计数据
       const data = {
