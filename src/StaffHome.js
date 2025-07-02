@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import CommentManagement from './CommentManagement';
 import PlanManagement from './PlanManagement';
 import OrderManagement from './OrderManagement';
+import axios from 'axios';
 
 const StaffHome = () => {
   const navigate = useNavigate();
@@ -21,38 +22,36 @@ const StaffHome = () => {
     setError('');
     
     try {
-      // // 模拟API请求延迟
-      // await new Promise(resolve => setTimeout(resolve, 800));
-    
+      
       const response = await axios.get('/api/Datas');
       if (response.data.status !== 'success') {
         throw new Error('获取统计数据失败');
       }
   
-      const dataFromStateata = response.data;
+      const data = response.data;
       
-      // 模拟统计数据
-      const data = {
-        popularPlans: [
-          { id: 'PLN002', title: '广州-深圳一日游', orderCount: 256 },
-          { id: 'PLN001', title: '北京-上海周末游', orderCount: 128 },
-          { id: 'PLN004', title: '北京-天津一日游', orderCount: 187 },
-          { id: 'PLN003', title: '上海-杭州三日游', orderCount: 89 }
-        ],
-        profitablePlans: [
-          { id: 'PLN003', title: '上海-杭州三日游', revenue: 799 * 89 },
-          { id: 'PLN001', title: '北京-上海周末游', revenue: 599 * 128 },
-          { id: 'PLN002', title: '广州-深圳一日游', revenue: 299 * 256 },
-          { id: 'PLN004', title: '北京-天津一日游', revenue: 199 * 187 }
-        ],
-        popularLocations: [
-          { city: '北京', count: 315 },
-          { city: '上海', count: 217 },
-          { city: '广州', count: 256 },
-          { city: '深圳', count: 189 },
-          { city: '杭州', count: 89 }
-        ]
-      };
+      // // 模拟统计数据
+      // const data = {
+      //   popularPlans: [
+      //     { id: 'PLN002', title: '广州-深圳一日游', orderCount: 256 },
+      //     { id: 'PLN001', title: '北京-上海周末游', orderCount: 128 },
+      //     { id: 'PLN004', title: '北京-天津一日游', orderCount: 187 },
+      //     { id: 'PLN003', title: '上海-杭州三日游', orderCount: 89 }
+      //   ],
+      //   profitablePlans: [
+      //     { id: 'PLN003', title: '上海-杭州三日游', revenue: 799 * 89 },
+      //     { id: 'PLN001', title: '北京-上海周末游', revenue: 599 * 128 },
+      //     { id: 'PLN002', title: '广州-深圳一日游', revenue: 299 * 256 },
+      //     { id: 'PLN004', title: '北京-天津一日游', revenue: 199 * 187 }
+      //   ],
+      //   popularLocations: [
+      //     { city: '北京', count: 315 },
+      //     { city: '上海', count: 217 },
+      //     { city: '广州', count: 256 },
+      //     { city: '深圳', count: 189 },
+      //     { city: '杭州', count: 89 }
+      //   ]
+      // };
       
       setStatsData(data);
     } catch (err) {

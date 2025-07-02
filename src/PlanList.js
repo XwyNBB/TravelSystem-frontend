@@ -21,34 +21,41 @@ const PlanList = () => {
     setError('');
 
     try {
-      // // const response = await axios.post('/api/Orders/search', {
-      // //   departure,
-      // //   destination 
-      // });
-      // 模拟API请求延迟
-      await new Promise(resolve => setTimeout(resolve, 800));
+      const response = await axios.post('/api/search', {
+        departure,
+        destination 
+      });
+
+      if (response.data.status !== 'success') {
+        throw new Error('获取行程列表失败');
+      }
+      const mockPlans = response.data.plans; // 假设后端返回的行程数据在plans字段中
+
+
+      // // 模拟API请求延迟
+      // await new Promise(resolve => setTimeout(resolve, 800));
       
-      // 模拟返回的行程数据
-      const mockPlans = [
-        { 
-          id: 'PLN001', title: '北京-上海周末游', price: 599, days: 2,
-          departureDate: '2025-06-20', returnDate: '2025-06-22', orderCount: 128,
-          accommodation: '三星酒店', transportation: '高铁往返', includedServices: '早餐, 导游服务',
-          departure: '北京', destination: '上海'
-        },
-        { 
-          id: 'PLN002', title: '广州-深圳一日游', price: 299, days: 1,
-          departureDate: '2025-06-18', returnDate: '2025-06-18', orderCount: 256,
-          accommodation: '无', transportation: '旅游大巴', includedServices: '午餐, 景点门票',
-           departure: '北京', destination: '上海'
-        },
-        { 
-          id: 'PLN003', title: '北京-杭州四日游', price: 1299, days: 4,
-          departureDate: '2025-06-25', returnDate: '2025-06-28', orderCount: 89,
-          accommodation: '四星酒店', transportation: '飞机往返', includedServices: '早餐, 导游服务, 景点门票',
-          departure: '北京', destination: '杭州'
-        }
-      ];
+      // // 模拟返回的行程数据
+      // const mockPlans = [
+      //   { 
+      //     id: 'PLN001', title: '北京-上海周末游', price: 599, days: 2,
+      //     departureDate: '2025-06-20', returnDate: '2025-06-22', orderCount: 128,
+      //     accommodation: '三星酒店', transportation: '高铁往返', includedServices: '早餐, 导游服务',
+      //     departure: '北京', destination: '上海'
+      //   },
+      //   { 
+      //     id: 'PLN002', title: '广州-深圳一日游', price: 299, days: 1,
+      //     departureDate: '2025-06-18', returnDate: '2025-06-18', orderCount: 256,
+      //     accommodation: '无', transportation: '旅游大巴', includedServices: '午餐, 景点门票',
+      //      departure: '北京', destination: '上海'
+      //   },
+      //   { 
+      //     id: 'PLN003', title: '北京-杭州四日游', price: 1299, days: 4,
+      //     departureDate: '2025-06-25', returnDate: '2025-06-28', orderCount: 89,
+      //     accommodation: '四星酒店', transportation: '飞机往返', includedServices: '早餐, 导游服务, 景点门票',
+      //     departure: '北京', destination: '杭州'
+      //   }
+      // ];
       
       // 根据URL参数筛选行程
       const filteredPlans = mockPlans.filter(plan => {
@@ -91,8 +98,8 @@ const PlanList = () => {
     navigate(-1); // 返回上一页
   };
 
-  const handleGenerateOrder = (planId) => {
-    navigate(`/order-generate?planId=${planId}`);
+  const handleGenerateOrder = (plan) => {
+    navigate(`/order-generate`,{state : {plan}}); // 跳转到生成订单页面并传递行程ID
   };
 
   // 当URL参数变化时重新获取数据
@@ -168,7 +175,7 @@ const PlanList = () => {
                   <p className="text-red-600 font-bold text-2xl mb-2">¥{plan.price}</p>
                   <button
                     className="w-full px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors duration-200 flex items-center justify-center"
-                    onClick={() => handleGenerateOrder(plan.id)}
+                    onClick={() => handleGenerateOrder(plan)}
                   >
                     生成订单
                   </button>

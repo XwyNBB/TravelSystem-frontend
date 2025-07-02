@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { AuthContext } from './AuthContext'; 
 
 const formatDate = (dateString) => {
   if (!dateString) return '';
@@ -11,66 +12,23 @@ const formatDate = (dateString) => {
 const CreateOrderPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [planId, setPlanId] = useState('');
+  const { account } = React.useContext(AuthContext); // 获取当前用户账号信息
   const [planData, setPlanData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(fales);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [formData, setFormData] = useState({
-    passengerName: '',
-    passengerPhone: '',
     specialRequests: ''
   });
 
-  // 从URL获取行程ID
-  const searchParams = new URLSearchParams(location.search);
-  const planIdFromUrl = searchParams.get('planId');
-
-  // 模拟从后端获取行程数据
-  const fetchPlanData = async (id) => {
-    setLoading(true);
-    setError('');
-    
-    try {
-      // 模拟API请求延迟
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      // 模拟行程数据（根据ID获取）
-      const mockPlans = {
-        'PLN001': { 
-          id: 'PLN001', 
-          title: '北京-上海周末游', 
-          price: 599,
-          departure: '北京', 
-          destination: '上海',
-          departureDate: '2025-06-20',
-          returnDate: '2025-06-22',
-          days: 2
-        },
-        'PLN002': { 
-          id: 'PLN002', 
-          title: '广州-深圳一日游', 
-          price: 299,
-          departure: '广州', 
-          destination: '深圳',
-          departureDate: '2025-06-18',
-          returnDate: '2025-06-18',
-          days: 1
-        }
-      };
-      
-      const plan = mockPlans[id];
-      if (!plan) throw new Error('行程不存在');
-      
+  useEffect(()=>{
+    const {plan} = location.state;
+    if (plan) {
       setPlanData(plan);
-      setPlanId(id);
-    } catch (err) {
-      setError('获取行程信息失败，请稍后再试');
-      console.error('Fetch plan error:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+    } else {
+      setError('行程信息不存在，请返回行程列表');
+    } 
+  })
 
   // 处理表单变化
   const handleFormChange = (e) => {
@@ -85,18 +43,22 @@ const CreateOrderPage = () => {
     setError('');
     
     try {
-      // 模拟订单生成API调用
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await axios.post('/api/createOrder', {
+        planId: planData.id,
+        account,
+        ...formData
+      });
+      // await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // 模拟生成的订单数据
-      const orderData = {
-        orderId: `ORD${Date.now().toString().slice(-8)}`,
-        planId,
-        passengerInfo: formData,
-        orderTime: new Date().toISOString(),
-        totalAmount: planData.price * formData.numOfPassengers,
-        status: 'unpaid'
-      };
+      // // 模拟生成的订单数据
+      // const orderData = {
+      //   orderId: `ORD${Date.now().toString().slice(-8)}`,
+      //   planId,
+      //   passengerInfo: formData,
+      //   orderTime: new Date().toISOString(),
+      //   totalAmount: planData.price * formData.numOfPassengers,
+      //   status: 'unpaid'
+      // };
       
       setSuccess({
         message: '订单生成成功，正在跳转至支付页面...',

@@ -157,7 +157,7 @@ const UserHome = ({ account }) => {
                   <button 
                     className="px-4 py-1.5 bg-gray-200 text-gray-800 rounded-md text-sm hover:bg-gray-300 mr-2"
                     disabled={loading}
-                    onClick={() => navigate(`/details-page/${order.id}`)}
+                    onClick={() => navigate(`/details-page/${order.id},{state: {order}}`)}
                   >
                     查看详情
                   </button>
@@ -174,7 +174,7 @@ const UserHome = ({ account }) => {
                   <button 
                     className="px-4 py-1.5 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600"
                     disabled={loading}
-                    onClick={() => navigate(`/comment-page/${order.id}`)}
+                    onClick={() => navigate(`/comment-page/${order.id},{state: {order}}`)}
                   >
                     add comment
                   </button>
